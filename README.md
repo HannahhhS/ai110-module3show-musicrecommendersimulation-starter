@@ -21,6 +21,31 @@ Explain your design in plain language.
 
 Some prompts to answer:
 
+Real world recommendations, like spotify and youtube, work by using both collaboritive filtering and content based filtering. Collaborative filtering finds other similar users that have a similar taste, and suggests what they like. Content based looks at the attributes of the songs you already like. My version will mainly use content based recommendations. 
+
+Each song will use features like genre, mood, energy, and acousticeness. The user profile will also store the users favorite genre, mood, energy, and acoustic preference as a boolean. The score is computed for each song by looking at each feature. When the genre or mood matches, the score increases by either 2 or 1 respectively. For energy, the closeness is calculated by finding the difference between the user preference and the song itself, and subtracting 1 to get a score. There is also a acoustic scoring as well. Finally, the top songs are chosen after ranking all the songs from highest to lowest.  
+
+Visualization of Process:
+Input & obtain user pref -> loop through each song in csv -> calculate score for each song, based on each feature. -> score starts at 0, keep updating based on ahy matches -> rank all songs from highest to lowest -> choose top k songs
+
+Algorithm for scoring:
+score = 0
+--here we reward genre matches with a higher score, as it is more unique--
+if song.genre == user.favorite_genre:  score += 2.0 
+
+--mood matches have a score of +1--
+if song.mood  == user.favorite_mood:   score += 1.0
+
+--match the energy, find the gap between the user pref and the song. Then negate the value, so lowest gaps are a higher score--
+score += 1.0 * (1 - abs(song.energy - user.target_energy))
+
+--look at the acoustic value, and compare to user pref--
+if (song.acousticness >= 0.5) == user.likes_acoustic:  score += 0.5
+
+possible biases - could favor more popular genre/types because it is more well represented. Weight would also have a bias, as it gets a higher score than mood
+
+
+
 - What features does each `Song` use in your system
   - For example: genre, mood, energy, tempo
 - What information does your `UserProfile` store
