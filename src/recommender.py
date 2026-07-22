@@ -94,22 +94,33 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
 
     Required by recommend_songs() and src/main.py
     """
+    # --- EXPERIMENT: Weight Shift (sensitivity test) ---
+    # Original weights: genre=2.0, mood=1.0, energy=1.0, acoustic=0.5
+    # This experiment DOUBLES energy (1.0 -> 2.0) and HALVES genre (2.0 -> 1.0)
+    # to see how sensitive the rankings are to the numeric feature vs. the
+    # categorical genre match. Restore these to 1.0 / 2.0 to undo.
+    GENRE_WEIGHT = 2.0    # experiment used 1.0
+    MOOD_WEIGHT = 1.0     # unchanged
+    ENERGY_WEIGHT = 1.0   # experiment used 2.0
+    ACOUSTIC_WEIGHT = 0.5  # unchanged
+    # --- end experiment ---
+
     score = 0.0
     reasons: List[str] = []
 
     # Genre match: worth the most because genre is the most distinctive feature.
     if user_prefs.get("genre") is not None and song["genre"] == user_prefs["genre"]:
-        score += 2.0
-        reasons.append(f"genre match: {song['genre']} (+2.0)")
+        score += GENRE_WEIGHT
+        reasons.append(f"genre match: {song['genre']} (+{GENRE_WEIGHT})")
 
     # Mood match.
     if user_prefs.get("mood") is not None and song["mood"] == user_prefs["mood"]:
-        score += 1.0
-        reasons.append(f"mood match: {song['mood']} (+1.0)")
+        score += MOOD_WEIGHT
+        reasons.append(f"mood match: {song['mood']} (+{MOOD_WEIGHT})")
 
     # Energy closeness: reward songs whose energy is near the target energy.
     if user_prefs.get("energy") is not None:
-        energy_points = 1.0 * (1 - abs(song["energy"] - user_prefs["energy"]))
+        energy_points = ENERGY_WEIGHT * (1 - abs(song["energy"] - user_prefs["energy"]))
         score += energy_points
         reasons.append(
             f"energy {song['energy']} vs target {user_prefs['energy']} "
@@ -121,8 +132,8 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     if user_prefs.get("likes_acoustic") is not None:
         is_acoustic = song["acousticness"] >= 0.5
         if is_acoustic == user_prefs["likes_acoustic"]:
-            score += 0.5
-            reasons.append("acoustic preference match (+0.5)")
+            score += ACOUSTIC_WEIGHT
+            reasons.append(f"acoustic preference match (+{ACOUSTIC_WEIGHT})")
 
     return score, reasons
 
